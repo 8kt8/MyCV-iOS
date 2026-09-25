@@ -30,7 +30,7 @@ private struct ExperienceCard: View {
     let experience: Experience
     @State private var isExpanded = false
 
-    private var hasDetails: Bool { !experience.highlights.isEmpty || !experience.techStack.isEmpty }
+    private var hasDetails: Bool { !experience.highlights.isEmpty }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.xSmall) {
@@ -73,6 +73,13 @@ private struct ExperienceCard: View {
                 Text(summary)
                     .font(.subheadline)
                     .padding(.top, Spacing.xxSmall)
+            }
+
+            // Always visible: the tech stack is what people skim a CV for.
+            if !experience.techStack.isEmpty {
+                Text(experience.techStack.joined(separator: " · "))
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
             }
 
             if isExpanded {
@@ -120,12 +127,6 @@ private struct ExperienceCard: View {
                     Text(highlight)
                 }
                 .font(.subheadline)
-            }
-            if !experience.techStack.isEmpty {
-                FlowLayout(spacing: Spacing.xSmall) {
-                    ForEach(experience.techStack, id: \.self) { TagView(text: $0) }
-                }
-                .padding(.top, Spacing.xxSmall)
             }
         }
         .padding(.top, Spacing.xxSmall)
