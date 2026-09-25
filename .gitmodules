@@ -1,0 +1,3 @@
+[submodule "CvApi"]
+	path = CvApi
+	url = https://github.com/8kt8/CvApi.git
