@@ -110,6 +110,7 @@ private struct ExperienceCard: View {
                     .contentShape(Rectangle())
                 }
                 .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+                .selectionFeedback(trigger: isExpanded)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -138,6 +139,7 @@ private struct StoreButton: View {
 
     var body: some View {
         if let url = URL(string: app.url) {
+            // System bordered capsule: picks up the iOS 26 look and the accent tint, with standard press states.
             Link(destination: url) {
                 HStack(spacing: Spacing.xSmall) {
                     storeIcon
@@ -147,11 +149,10 @@ private struct StoreButton: View {
                         Text(app.name).font(.subheadline.weight(.semibold))
                     }
                 }
-                .padding(.horizontal, Spacing.small)
-                .padding(.vertical, 6)
-                .frame(minHeight: 44)
-                .overlay(Capsule().stroke(Color.accentColor.opacity(0.5)))
+                .frame(minHeight: 32)
             }
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Get \(app.name) on \(storeName)")
             .accessibilityAddTraits(.isLink)

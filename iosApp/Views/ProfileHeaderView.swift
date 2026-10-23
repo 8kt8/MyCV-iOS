@@ -16,6 +16,7 @@ struct ProfileHeaderView: View {
                 .font(.title.bold())
                 .multilineTextAlignment(.center)
                 .accessibilityAddTraits(.isHeader)
+                .reportsHeaderTitleBottom()
 
             Text(profile.headline)
                 .font(.headline)
@@ -46,7 +47,7 @@ struct ProfileHeaderView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, Spacing.medium)
-        .padding(.top, Spacing.large)
+        .padding(.top, Spacing.xSmall) // sits right below the navigation bar
     }
 }
 
@@ -60,25 +61,29 @@ private struct ContactButton: View {
         if let url = URL(string: contact.url) {
             Link(destination: url) {
                 VStack(spacing: Spacing.xSmall) {
-                    icon
+                    contact.icon
                         .frame(width: 24, height: 24)
                         .foregroundStyle(Color.accentColor)
                         .frame(width: circleSize, height: circleSize)
                         .background(Color.accentColor.opacity(0.15), in: Circle())
-                    Text(title)
+                    Text(contact.displayTitle)
                         .font(.caption)
                         .foregroundStyle(Color(.secondaryLabel)) // explicit: Link would tint it
                 }
                 .frame(minWidth: 64)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(title): \(contact.label)")
+            .accessibilityLabel("\(contact.displayTitle): \(contact.label)")
             .accessibilityAddTraits(.isLink)
         }
     }
 
-    private var title: String {
-        switch contact.type {
+}
+
+extension ContactLink {
+    /// Short name of the action, shared by the header buttons and the toolbar menu.
+    var displayTitle: String {
+        switch type {
         case .github: "GitHub"
         case .linkedin: "LinkedIn"
         case .email: "Email"
@@ -87,8 +92,8 @@ private struct ContactButton: View {
         }
     }
 
-    @ViewBuilder private var icon: some View {
-        switch contact.type {
+    @ViewBuilder var icon: some View {
+        switch type {
         case .github: Image("github").resizable().scaledToFit()
         case .linkedin: Image("linkedin").resizable().scaledToFit()
         case .email: Image(systemName: "envelope.fill").resizable().scaledToFit()

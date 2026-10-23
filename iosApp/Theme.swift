@@ -13,7 +13,8 @@ enum Spacing {
 enum Metrics {
     /// Readable line length on iPad and in landscape.
     static let maxContentWidth: CGFloat = 700
-    static let cardCornerRadius: CGFloat = 20
+    /// Concentric with the 48pt logos inside cards (12pt radius + 16pt padding), as the iOS 26 HIG recommends.
+    static let cardCornerRadius: CGFloat = 28
 }
 
 extension View {
@@ -23,5 +24,17 @@ extension View {
             Color(.secondarySystemGroupedBackground),
             in: RoundedRectangle(cornerRadius: Metrics.cardCornerRadius, style: .continuous)
         )
+    }
+}
+
+extension View {
+    /// Light selection haptic when `trigger` changes (iOS 17+; no-op before).
+    @ViewBuilder
+    func selectionFeedback<T: Equatable>(trigger: T) -> some View {
+        if #available(iOS 17.0, *) {
+            sensoryFeedback(.selection, trigger: trigger)
+        } else {
+            self
+        }
     }
 }
