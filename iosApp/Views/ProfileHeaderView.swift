@@ -35,6 +35,8 @@ struct ProfileHeaderView: View {
                         ContactButton(contact: contact)
                     }
                 }
+                // Three round buttons have to fit side by side: cap their scaling (the rest of the page still scales).
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .padding(.top, Spacing.medium)
             }
 
@@ -92,13 +94,19 @@ extension ContactLink {
         }
     }
 
-    @ViewBuilder var icon: some View {
+    /// Plain image, as menus need it (they drop modified images).
+    var iconImage: Image {
         switch type {
-        case .github: Image("github").resizable().scaledToFit()
-        case .linkedin: Image("linkedin").resizable().scaledToFit()
-        case .email: Image(systemName: "envelope.fill").resizable().scaledToFit()
-        case .phone: Image(systemName: "phone.fill").resizable().scaledToFit()
-        default: Image(systemName: "globe").resizable().scaledToFit()
+        case .github: Image("github")
+        case .linkedin: Image("linkedin")
+        case .email: Image(systemName: "envelope.fill")
+        case .phone: Image(systemName: "phone.fill")
+        default: Image(systemName: "globe")
         }
+    }
+
+    /// Icon that fills the frame it's given.
+    var icon: some View {
+        iconImage.resizable().scaledToFit()
     }
 }

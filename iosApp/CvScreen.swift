@@ -34,8 +34,10 @@ struct CvScreen: View {
 private struct CvContent: View {
     let cv: Cv
 
-    /// Content top at rest, in the scroll view's coordinate space (the bar's bottom edge).
-    @State private var restingTop: CGFloat?
+    /// The navigation bar's bottom edge in the scroll view's coordinate space (its top safe area inset).
+    /// Read live, so it follows rotation, iPad multitasking and inline bar height changes.
+    @State private var barBottom: CGFloat = 0
+    @State private var contentTop: CGFloat = 0
     @State private var titleBottom: CGFloat = .infinity
     @State private var isScrolled = false
     /// True once the name in the header has scrolled under the navigation bar.
@@ -85,24 +87,23 @@ private struct CvContent: View {
             .frame(height: 520)
             .ignoresSafeArea(edges: .top)
         }
+        .background {
+            GeometryReader { proxy in
+                Color.clear.preference(key: BarBottomKey.self, value: proxy.safeAreaInsets.top)
+            }
+        }
         .coordinateSpace(name: CvScrollSpace.name)
-        .onPreferenceChange(ScrollOffsetKey.self) { top in
-            if restingTop == nil { restingTop = top }
-            let rest = restingTop ?? top
-            updateBar(isScrolled: top < rest - 8, showsTitle: titleBottom < rest)
-        }
-        .onPreferenceChange(HeaderTitleBottomKey.self) { bottom in
-            titleBottom = bottom
-            guard let rest = restingTop else { return }
-            updateBar(isScrolled: isScrolled, showsTitle: bottom < rest)
-        }
+        .onPreferenceChange(BarBottomKey.self) { barBottom = $0; updateBar() }
+        .onPreferenceChange(ScrollOffsetKey.self) { contentTop = $0; updateBar() }
+        .onPreferenceChange(HeaderTitleBottomKey.self) { titleBottom = $0; updateBar() }
         // Standard navigation bar: Liquid Glass on iOS 26+, the bar material on earlier versions.
         // The name and a contact menu appear in it once the header has scrolled away.
         .navigationTitle(showsTitle ? cv.profile.fullName : "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                if showsTitle && !cv.contacts.isEmpty {
+            // The item itself is conditional: an empty item would still get a glass capsule on iOS 26.
+            if showsTitle && !cv.contacts.isEmpty {
+                ToolbarItem(placement: .primaryAction) {
                     ContactMenu(contacts: cv.contacts)
                 }
             }
@@ -110,7 +111,9 @@ private struct CvContent: View {
         .navigationBarScrim(visible: isScrolled)
     }
 
-    private func updateBar(isScrolled scrolled: Bool, showsTitle title: Bool) {
+    private func updateBar() {
+        let scrolled = contentTop < barBottom - 8
+        let title = titleBottom < barBottom
         guard scrolled != isScrolled || title != showsTitle else { return }
         withAnimation(.easeInOut(duration: 0.2)) {
             isScrolled = scrolled
@@ -128,7 +131,7 @@ private struct ContactMenu: View {
             ForEach(Array(contacts.enumerated()), id: \.offset) { _, contact in
                 if let url = URL(string: contact.url) {
                     Link(destination: url) {
-                        Label { Text(contact.displayTitle) } icon: { contact.icon }
+                        Label { Text(contact.displayTitle) } icon: { contact.iconImage }
                     }
                 }
             }
@@ -156,6 +159,11 @@ private struct ScrollOffsetReader: View {
 }
 
 private struct ScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+
+private struct BarBottomKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
